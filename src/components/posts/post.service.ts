@@ -1,15 +1,29 @@
+import { CreatePostDTO } from './dto/create-post.dto';
 import { Injectable } from '@nestjs/common';
-import { Post } from './interfaces/post.interface';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Post } from './entities/post.entity';
 
 @Injectable()
 export class PostsService {
-  private readonly posts: Post[] = [];
+  constructor(
+    @InjectRepository(Post)
+    private postRepository: Repository<Post>,
+  ) {}
 
-  create(post: Post) {
-    this.posts.push(post);
+  async create(createPostDTO: CreatePostDTO) {
+    const CreatePostData: any = {
+      ...createPostDTO,
+    };
+
+    const post = await this.postRepository.save(CreatePostData);
+    return post.id;
   }
 
-  findAll(): Post[] {
-    return this.posts;
+  listAll() {
+    return this.postRepository
+      .createQueryBuilder('posts')
+      .select(['posts.id', 'posts.post_name'])
+      .getMany();
   }
 }
